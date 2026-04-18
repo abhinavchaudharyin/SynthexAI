@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+httpx
+python-dotenv
+groq
+google-generativeai
+mistralai
+tavily-python
+elevenlabs
+python-multipart

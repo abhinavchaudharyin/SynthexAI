@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynthexAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Main Page -->
+<div class="page" id="mainPage">
+  <div class="bg-grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">SynthexAI</span>
+    </div>
+    <div class="header-badge">Multi-LLM Orchestration</div>
+  </header>
+
+  <main class="hero">
+    <div class="hero-tag">Powered by Groq · Gemini · Mistral</div>
+    <h1 class="hero-title">Three Minds.<br><span class="gradient-text">One Answer.</span></h1>
+    <p class="hero-sub">SynthexAI simultaneously queries multiple AI models, filters outliers, and synthesizes the perfect response — with real-time web intelligence.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="openChat()">
+        <span>Start Conversation</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="model-pills">
+      <div class="pill pill-groq">
+        <span class="pill-dot"></span>Groq · Llama 3
+      </div>
+      <div class="pill pill-gemini">
+        <span class="pill-dot"></span>Google · Gemini
+      </div>
+      <div class="pill pill-mistral">
+        <span class="pill-dot"></span>Mistral · Small
+      </div>
+      <div class="pill pill-search">
+        <span class="pill-dot"></span>Tavily · Search
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Chat Widget -->
+<div class="widget-container" id="widget" style="display:none;">
+  <div class="widget" id="widgetBox">
+
+    <!-- Widget Header -->
+    <div class="widget-header">
+      <div class="widget-logo">
+        <div class="widget-logo-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="widget-title">SynthexAI</div>
+          <div class="widget-status" id="statusText">
+            <span class="status-dot"></span>
+            All systems online
+          </div>
+        </div>
+      </div>
+      <div class="widget-controls">
+        <button class="ctrl-btn" onclick="toggleExpand()" title="Expand">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" id="expandIcon"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="closeChat()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Model Status Bar -->
+    <div class="model-bar">
+      <div class="model-chip" id="chip-groq">
+        <span class="chip-dot"></span>Groq
+      </div>
+      <div class="model-chip" id="chip-gemini">
+        <span class="chip-dot"></span>Gemini
+      </div>
+      <div class="model-chip" id="chip-mistral">
+        <span class="chip-dot"></span>Mistral
+      </div>
+      <div class="model-chip" id="chip-search">
+        <span class="chip-dot chip-search"></span>Web
+      </div>
+      <div class="confidence-badge" id="confidenceBadge" style="display:none;">
+        <span id="confidenceVal">—</span> confidence
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <div class="welcome-msg">
+        <div class="welcome-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Hello! I'm SynthexAI</h3>
+        <p>I consult multiple AI models simultaneously and synthesize the best answer for you. Ask me anything — I also search the web in real-time.</p>
+        <div class="suggestion-chips">
+          <button class="suggestion" onclick="sendSuggestion('What is machine learning?')">What is machine learning?</button>
+          <button class="suggestion" onclick="sendSuggestion('Latest news in AI today')">Latest AI news</button>
+          <button class="suggestion" onclick="sendSuggestion('Explain quantum computing simply')">Explain quantum computing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing Status -->
+    <div class="processing-bar" id="processingBar" style="display:none;">
+      <div class="processing-steps">
+        <div class="proc-step" id="step1">
+          <div class="proc-dot active"></div>
+          <span id="step1text">Checking guardrails...</span>
+        </div>
+        <div class="proc-divider"></div>
+        <div class="proc-step" id="step2">
+          <div class="proc-dot"></div>
+          <span id="step2text">Searching web...</span>
+        </div>
+        <div class="proc-divider"></div>
+        <div class="proc-step" id="step3">
+          <div class="proc-dot"></div>
+          <span id="step3text">Consulting models...</span>
+        </div>
+        <div class="proc-divider"></div>
+        <div class="proc-step" id="step4">
+          <div class="proc-dot"></div>
+          <span id="step4text">Synthesizing...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sources Panel -->
+    <div class="sources-panel" id="sourcesPanel" style="display:none;">
+      <div class="sources-label">Sources</div>
+      <div class="sources-list" id="sourcesList"></div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <!-- Image preview -->
+      <div class="image-preview" id="imagePreview" style="display:none;">
+        <img id="previewImg" src="" alt="preview"/>
+        <button class="remove-img" onclick="removeImage()">×</button>
+      </div>
+
+      <div class="input-row">
+        <button class="input-btn" onclick="triggerImageUpload()" title="Upload image">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"/>
+
+        <textarea
+          id="queryInput"
+          class="query-input"
+          placeholder="Ask anything..."
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+
+        <button class="input-btn mic-btn" id="micBtn" onclick="toggleVoice()" title="Voice input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+
+        <button class="send-btn" id="sendBtn" onclick="sendQuery()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="input-footer">
+        <span class="footer-hint">↵ Send · Shift+↵ New line</span>
+        <div class="model-transparency" id="lastModelInfo"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Trigger Button -->
+<button class="float-btn" id="floatBtn" onclick="openChat()" style="display:none;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<script src="widget.js"></script>
+</body>
+</html>
