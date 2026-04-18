@@ -5,6 +5,15 @@
 A premium Multi-LLM orchestration system that simultaneously queries **Groq (Llama 3)**, **Google Gemini**, and **Mistral**, filters outlier responses, and synthesizes one perfect answer — with real-time web search, voice input, and OCR.
 
 ---
+---
+
+## Demo Video
+
+[![SynthexAI Demo](https://img.shields.io/badge/Watch%20Demo-Google%20Drive-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1CxSyKJYE84QsYdbPnmZ9W3nEXuejvZSc/view?usp=sharing)
+
+> Click the badge above to watch the full demo video.
+
+---
 
 ## Features
 
