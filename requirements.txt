@@ -3,8 +3,8 @@ uvicorn
 httpx
 python-dotenv
 groq
-google-generativeai
-mistralai
+google-genai
+mistralai==0.4.2
 tavily-python
-elevenlabs
 python-multipart
+tenacity
