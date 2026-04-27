@@ -81,13 +81,12 @@ async function processQuery(query) {
   await animateStep(2, 'Searching web...');
   await sleep(500);
   await animateStep(3, 'Consulting Groq · Gemini · Mistral...');
-
   setChipActive(['chip-groq', 'chip-gemini', 'chip-mistral', 'chip-search']);
 
   const typingId = showTyping();
 
   try {
-    const res = await fetch(`${API_BASE}/chat`, {
+    const res = await fetch(`${API_BASE}/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -97,35 +96,87 @@ async function processQuery(query) {
       })
     });
 
-    const data = await res.json();
-
     await animateStep(4, 'Synthesizing answer...');
-    await sleep(300);
-
     removeTyping(typingId);
     showProcessing(false);
 
-    if (data.success) {
-      conversationHistory.push({ role: 'user', content: query });
-      conversationHistory.push({ role: 'assistant', content: data.answer });
+    // Streaming bubble banao
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg ai';
+    msgDiv.innerHTML = `
+      <div class="msg-role">SynthexAI</div>
+      <div class="msg-bubble" id="streaming-bubble"></div>
+      <div class="msg-meta" id="streaming-meta"></div>
+    `;
+    document.getElementById('messages').appendChild(msgDiv);
 
-      appendAIMessage(data.answer, data.models_used, data.models_skipped);
-      updateChips(data.models_used, data.models_skipped);
-      showConfidence(data.models_used);
+    const bubble = document.getElementById('streaming-bubble');
+    let fullText = '';
+    let metaData = null;
 
-      if (data.sources && data.sources.length > 0) {
-        showSources(data.sources);
-      } else {
-        hideSources();
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+
+      // Last incomplete line buffer mein rakho
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr) continue;
+
+        try {
+          const data = JSON.parse(jsonStr);
+
+          if (data.type === 'meta') {
+            metaData = data;
+            updateChips(data.models_used, data.models_skipped);
+            showConfidence(data.models_used);
+            if (data.sources && data.sources.length > 0) {
+              showSources(data.sources);
+            } else {
+              hideSources();
+            }
+            updateFooter(data.models_used, data.models_skipped);
+
+          } else if (data.type === 'token') {
+            fullText += data.text;
+            bubble.innerHTML = formatAnswer(fullText);
+            scrollToBottom();
+
+          } else if (data.type === 'done') {
+            conversationHistory.push({ role: 'user', content: query });
+            conversationHistory.push({ role: 'assistant', content: fullText });
+
+            const meta = document.getElementById('streaming-meta');
+            if (metaData && meta) {
+              const tags = (metaData.models_used || []).map(m =>
+                `<span class="model-tag">${m}</span>`
+              ).join('');
+              const skippedText = metaData.models_skipped && metaData.models_skipped.length > 0
+                ? ` · skipped: ${metaData.models_skipped.join(', ')}`
+                : '';
+              meta.innerHTML = `<div class="msg-model-tag">${tags}</div><span>${skippedText}</span>`;
+            }
+
+            bubble.removeAttribute('id');
+            document.getElementById('streaming-meta')?.removeAttribute('id');
+            setStatus('All systems online');
+          }
+        } catch (e) {
+          // Invalid JSON — skip
+        }
       }
-
-      updateFooter(data.models_used, data.models_skipped);
-      setStatus('All systems online');
-
-    } else {
-      appendAIMessage('⚠️ ' + (data.answer || 'Something went wrong. Please try again.'), [], []);
-      setStatus('Error — try again');
     }
+
   } catch (err) {
     removeTyping(typingId);
     showProcessing(false);
@@ -430,16 +481,22 @@ function formatAnswer(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/### (.*?)(\n|$)/g, '<h4 style="font-family:Times New Roman,serif;font-size:1rem;font-weight:700;margin:14px 0 6px;color:#F0F0F8;">$1</h4>')
-    .replace(/## (.*?)(\n|$)/g, '<h3 style="font-family:Times New Roman,serif;font-size:1.1rem;font-weight:700;margin:16px 0 8px;color:#F0F0F8;">$1</h3>')
+    .replace(/### (.*?)(\n|$)/g, '<h4 style="font-family:Times New Roman,serif;font-size:1rem;font-weight:700;margin:14px 0 4px;color:#F0F0F8;">$1</h4>')
+    .replace(/## (.*?)(\n|$)/g, '<h3 style="font-family:Times New Roman,serif;font-size:1.1rem;font-weight:700;margin:16px 0 4px;color:#F0F0F8;">$1</h3>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:0.82em">$1</code>')
-    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:12px 0;">')
-    .replace(/^\d+\. (.*)/gm, '<div style="margin:2px 0;padding-left:16px;font-family:Times New Roman,serif;font-size:0.95rem;">$1</div>')
-    .replace(/^- (.*)/gm, '<div style="margin:2px 0;padding-left:16px;font-family:Times New Roman,serif;font-size:0.95rem;">• $1</div>')
-    .replace(/^\|.*\|$/gm, '')
-    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0;">')
+    .replace(/^\d+\. (.*)/gm, '<div style="margin:1px 0;padding-left:16px;font-family:Times New Roman,serif;font-size:0.95rem;">$1</div>')
+    .replace(/^- (.*)/gm, '<div style="margin:1px 0;padding-left:16px;font-family:Times New Roman,serif;font-size:0.95rem;">• $1</div>')
+    .replace(/^\|(.+)\|$/gm, (match) => {
+      const cells = match.split('|').filter(c => c.trim());
+      if (cells.every(c => c.trim().match(/^[-:\s]+$/))) return '';
+      return '<div style="display:flex;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        cells.map(c => `<span style="flex:1;font-family:Times New Roman,serif;font-size:0.88rem;color:#F0F0F8;">${c.trim()}</span>`).join('') +
+        '</div>';
+    })
+    .replace(/\n{2,}/g, '<br>')
     .replace(/\n/g, '<br>');
 }
 
